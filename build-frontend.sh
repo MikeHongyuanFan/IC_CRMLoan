@@ -3,6 +3,10 @@ set -e
 
 echo "Building frontend applications..."
 
+# Remove any existing frontend builder containers
+echo "Cleaning up any existing frontend builder containers..."
+docker rm -f crm-frontend-builder cp-frontend-builder 2>/dev/null || true
+
 # Build CRM frontend
 echo "Building CRM frontend..."
 docker run --name crm-frontend-builder -v $(pwd)/CRM项目/web/crm:/app -w /app node:14-alpine sh -c "npm install && npm run build"

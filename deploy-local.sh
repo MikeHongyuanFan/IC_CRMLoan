@@ -3,6 +3,14 @@
 # Exit on error
 set -e
 
+# Check if cleanup flag is provided
+if [ "$1" == "--clean" ]; then
+  echo "Cleaning up existing containers and volumes..."
+  docker-compose down -v
+  docker rm -f maven-builder crm-frontend-builder cp-frontend-builder 2>/dev/null || true
+  echo "Cleanup completed."
+fi
+
 echo "Starting local deployment of CRM Loan System..."
 
 # Step 1: Run the setup script to prepare Docker files

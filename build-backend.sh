@@ -3,6 +3,10 @@ set -e
 
 echo "Building backend services..."
 
+# Remove any existing Maven builder container
+echo "Cleaning up any existing Maven builder container..."
+docker rm -f maven-builder 2>/dev/null || true
+
 # Create a temporary Docker container to build the backend
 echo "Creating Maven container to build the backend..."
 docker run --name maven-builder -v $(pwd)/CRM项目/api/crm:/app -v $(pwd)/maven-settings.xml:/root/.m2/settings.xml -w /app maven:3.8-openjdk-8 mvn clean package -DskipTests
