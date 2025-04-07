@@ -15,7 +15,8 @@ services:
     command: redis-server --port 6379 --requirepass redirect!@#aly --appendonly yes
 
   mysql:
-    image: mysql/mysql-server:5.7.22
+    image: mysql:5.7
+    platform: linux/arm64
     hostname: loan-mysql-url
     container_name: loan-mysql
     restart: always
@@ -26,6 +27,7 @@ services:
     environment:
       MYSQL_ROOT_HOST: "%"
       MYSQL_ROOT_PASSWORD: redirect!@#aly
+      MYSQL_DATABASE: nacos
     command:
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_general_ci
@@ -41,6 +43,7 @@ services:
   nacos:
     hostname: loan-nacos-url
     image: nacos/nacos-server:1.3.2
+    platform: linux/arm64
     restart: always
     container_name: loan-nacos
     depends_on:

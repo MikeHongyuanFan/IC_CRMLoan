@@ -17,15 +17,16 @@ if [ ! -f "CRM项目/web/cp-web/docker/Dockerfile" ]; then
   echo "Creating Dockerfile for CP Web frontend..."
   mkdir -p CRM项目/web/cp-web/docker
   cat > CRM项目/web/cp-web/docker/Dockerfile << 'EOF'
-FROM nginx 
+FROM node:14-alpine AS builder
+WORKDIR /app
+COPY . .
+RUN npm install && npm run build
 
-COPY ./dist /data
-
+FROM nginx:alpine
+COPY --from=builder /app/dist /data
 RUN rm /etc/nginx/conf.d/default.conf
-
-ADD cp-web.conf /etc/nginx/conf.d/
-EXPOSE 9528
-RUN /bin/bash -c 'echo init ok'
+COPY docker/cp-web.conf /etc/nginx/conf.d/
+EXPOSE 80
 EOF
 
   # Create Nginx config for CP Web
@@ -57,6 +58,21 @@ server {
 EOF
 fi
 
+# Update CRM frontend Dockerfile to use multi-stage build
+echo "Updating CRM frontend Dockerfile..."
+cat > CRM项目/web/crm/docker/Dockerfile << 'EOF'
+FROM node:14-alpine AS builder
+WORKDIR /app
+COPY . .
+RUN npm install && npm run build
+
+FROM nginx:alpine
+COPY --from=builder /app/dist /data
+RUN rm /etc/nginx/conf.d/default.conf
+COPY docker/aus-crm.conf /etc/nginx/conf.d/
+EXPOSE 80
+EOF
+
 # Update CRM frontend Nginx config to use container name instead of IP
 echo "Updating CRM frontend Nginx configuration..."
 cat > CRM项目/web/crm/docker/aus-crm.conf << 'EOF'
@@ -86,8 +102,5 @@ server {
 }
 EOF
 
-echo "Setup complete! You can now build and run the services with:"
-echo "1. Build backend services: cd CRM项目/api/crm && mvn clean package -DskipTests"
-echo "2. Build frontend: cd CRM项目/web/crm && npm install && npm run build"
-echo "3. Build CP frontend: cd CRM项目/web/cp-web && npm install && npm run build"
-echo "4. Start all services: docker-compose up -d"
+echo "Setup complete! You can now run the services with:"
+echo "docker-compose up -d"
