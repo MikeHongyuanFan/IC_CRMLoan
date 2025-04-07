@@ -58,13 +58,13 @@ docker cp maven-builder:/app/crm-file/target/crm-file.jar target/ || echo "Warni
 echo "Cleaning up Maven container..."
 docker rm maven-builder
 
-# Create simple Dockerfiles for each service
+# Create simple Dockerfiles for each service with correct paths
 echo "Creating Dockerfiles for backend services..."
 
 cat > CRM项目/api/crm/crm-gateway/Dockerfile << 'DOCKERFILE'
 FROM openjdk:8-jdk-alpine
 WORKDIR /app
-COPY ../../../../../../target/crm-gateway.jar app.jar
+COPY target/crm-gateway.jar app.jar
 ENV SPRING_PROFILES_ACTIVE=prod
 ENV loan.nacos.addr=loan-nacos-url
 EXPOSE 30001
@@ -74,7 +74,7 @@ DOCKERFILE
 cat > CRM项目/api/crm/crm-am/Dockerfile << 'DOCKERFILE'
 FROM openjdk:8-jdk-alpine
 WORKDIR /app
-COPY ../../../../../../target/crm-am.jar app.jar
+COPY target/crm-am.jar app.jar
 ENV SPRING_PROFILES_ACTIVE=prod
 ENV loan.nacos.addr=loan-nacos-url
 ENTRYPOINT ["java", "-jar", "app.jar"]
@@ -83,7 +83,7 @@ DOCKERFILE
 cat > CRM项目/api/crm/crm-cp/Dockerfile << 'DOCKERFILE'
 FROM openjdk:8-jdk-alpine
 WORKDIR /app
-COPY ../../../../../../target/crm-cp.jar app.jar
+COPY target/crm-cp.jar app.jar
 ENV SPRING_PROFILES_ACTIVE=prod
 ENV loan.nacos.addr=loan-nacos-url
 ENTRYPOINT ["java", "-jar", "app.jar"]
@@ -92,7 +92,7 @@ DOCKERFILE
 cat > CRM项目/api/crm/crm-file/Dockerfile << 'DOCKERFILE'
 FROM openjdk:8-jdk-alpine
 WORKDIR /app
-COPY ../../../../../../target/crm-file.jar app.jar
+COPY target/crm-file.jar app.jar
 ENV SPRING_PROFILES_ACTIVE=prod
 ENV loan.nacos.addr=loan-nacos-url
 ENTRYPOINT ["java", "-jar", "app.jar"]

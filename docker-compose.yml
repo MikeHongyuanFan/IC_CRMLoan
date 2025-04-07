@@ -1,0 +1,134 @@
+version: '3'
+
+services:
+  # Infrastructure services
+  mysql:
+    container_name: loan-mysql
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: loan_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - crm_network
+
+  redis:
+    container_name: loan-redis
+    image: redis:6.0
+    ports:
+      - "6379:6379"
+    networks:
+      - crm_network
+
+  nacos:
+    container_name: loan-nacos
+    image: nacos/nacos-server:1.4.1
+    environment:
+      MODE: standalone
+      SPRING_DATASOURCE_PLATFORM: mysql
+      MYSQL_SERVICE_HOST: mysql
+      MYSQL_SERVICE_PORT: 3306
+      MYSQL_SERVICE_USER: root
+      MYSQL_SERVICE_PASSWORD: root
+      MYSQL_SERVICE_DB_NAME: nacos_config
+      NACOS_AUTH_ENABLE: "false"
+    ports:
+      - "8848:8848"
+    depends_on:
+      - mysql
+    networks:
+      - crm_network
+
+  # Backend services
+  crm-gateway:
+    build:
+      context: .
+      dockerfile: CRM项目/api/crm/crm-gateway/Dockerfile
+    container_name: loan-gateway
+    ports:
+      - "30001:30001"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - loan.nacos.addr=loan-nacos:8848
+    depends_on:
+      - nacos
+      - mysql
+      - redis
+    networks:
+      - crm_network
+
+  crm-am:
+    build:
+      context: .
+      dockerfile: CRM项目/api/crm/crm-am/Dockerfile
+    container_name: loan-am
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - loan.nacos.addr=loan-nacos:8848
+    depends_on:
+      - nacos
+      - mysql
+      - redis
+    networks:
+      - crm_network
+
+  crm-cp:
+    build:
+      context: .
+      dockerfile: CRM项目/api/crm/crm-cp/Dockerfile
+    container_name: loan-cp
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - loan.nacos.addr=loan-nacos:8848
+    depends_on:
+      - nacos
+      - mysql
+      - redis
+    networks:
+      - crm_network
+
+  crm-file:
+    build:
+      context: .
+      dockerfile: CRM项目/api/crm/crm-file/Dockerfile
+    container_name: loan-file
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - loan.nacos.addr=loan-nacos:8848
+    depends_on:
+      - nacos
+      - mysql
+      - redis
+    networks:
+      - crm_network
+
+  # Frontend services
+  crm-frontend:
+    image: nginx:alpine
+    container_name: loan-crm-frontend
+    ports:
+      - "9527:80"
+    volumes:
+      - ./frontend-dist/crm:/usr/share/nginx/html
+    networks:
+      - crm_network
+
+  cp-frontend:
+    image: nginx:alpine
+    container_name: loan-cp-frontend
+    ports:
+      - "9528:80"
+    volumes:
+      - ./frontend-dist/cp-web:/usr/share/nginx/html
+    networks:
+      - crm_network
+
+networks:
+  crm_network:
+    name: gls_crm_network
+
+volumes:
+  mysql-data:
