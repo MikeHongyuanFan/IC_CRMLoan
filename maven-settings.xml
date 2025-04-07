@@ -4,11 +4,12 @@
           xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
   
   <mirrors>
+    <!-- Use Maven Central instead of Aliyun -->
     <mirror>
-      <id>aliyun-maven</id>
+      <id>maven-central</id>
       <mirrorOf>central</mirrorOf>
-      <name>Aliyun Maven Mirror</name>
-      <url>https://maven.aliyun.com/repository/public</url>
+      <name>Maven Central</name>
+      <url>https://repo.maven.apache.org/maven2</url>
     </mirror>
   </mirrors>
   
@@ -18,7 +19,7 @@
       <repositories>
         <repository>
           <id>central</id>
-          <url>https://maven.aliyun.com/repository/public</url>
+          <url>https://repo.maven.apache.org/maven2</url>
           <releases>
             <enabled>true</enabled>
           </releases>
@@ -30,7 +31,7 @@
       <pluginRepositories>
         <pluginRepository>
           <id>central</id>
-          <url>https://maven.aliyun.com/repository/public</url>
+          <url>https://repo.maven.apache.org/maven2</url>
           <releases>
             <enabled>true</enabled>
           </releases>

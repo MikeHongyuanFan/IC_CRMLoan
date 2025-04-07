@@ -9,7 +9,40 @@ docker rm -f maven-builder 2>/dev/null || true
 
 # Create a temporary Docker container to build the backend
 echo "Creating Maven container to build the backend..."
-docker run --name maven-builder -v $(pwd)/CRM项目/api/crm:/app -v $(pwd)/maven-settings.xml:/root/.m2/settings.xml -w /app maven:3.8-openjdk-8 mvn clean package -DskipTests
+echo "This may take several minutes. Maven is downloading dependencies and building the project..."
+
+# Run Maven with a timeout and retry mechanism
+MAX_RETRIES=3
+RETRY_COUNT=0
+SUCCESS=false
+
+while [ $RETRY_COUNT -lt $MAX_RETRIES ] && [ "$SUCCESS" = false ]; do
+  echo "Attempt $(($RETRY_COUNT + 1)) of $MAX_RETRIES..."
+  
+  if docker run --name maven-builder \
+    -v $(pwd)/CRM项目/api/crm:/app \
+    -v $(pwd)/maven-settings.xml:/root/.m2/settings.xml \
+    -w /app maven:3.8-openjdk-8 \
+    mvn clean package -DskipTests -Dmaven.wagon.http.retryHandler.count=3; then
+    
+    SUCCESS=true
+    echo "Maven build completed successfully!"
+  else
+    echo "Maven build failed. Retrying..."
+    docker rm -f maven-builder 2>/dev/null || true
+    RETRY_COUNT=$(($RETRY_COUNT + 1))
+    
+    if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+      echo "Waiting 10 seconds before retrying..."
+      sleep 10
+    fi
+  fi
+done
+
+if [ "$SUCCESS" = false ]; then
+  echo "Failed to build backend after $MAX_RETRIES attempts. Exiting."
+  exit 1
+fi
 
 # Create target directory if it doesn't exist
 mkdir -p target
