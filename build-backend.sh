@@ -5,17 +5,17 @@ echo "Building backend services..."
 
 # Create a temporary Docker container to build the backend
 echo "Creating Maven container to build the backend..."
-docker run --name maven-builder -v $(pwd)/CRM项目/api/crm:/app -w /app maven:3.8-openjdk-8 mvn clean package -DskipTests
+docker run --name maven-builder -v $(pwd)/CRM项目/api/crm:/app -v $(pwd)/maven-settings.xml:/root/.m2/settings.xml -w /app maven:3.8-openjdk-8 mvn clean package -DskipTests
 
 # Create target directory if it doesn't exist
 mkdir -p target
 
 # Copy the built JAR files from the container to the host
 echo "Copying built JAR files..."
-docker cp maven-builder:/app/crm-gateway/target/crm-gateway.jar target/
-docker cp maven-builder:/app/crm-am/target/crm-am.jar target/
-docker cp maven-builder:/app/crm-cp/target/crm-cp.jar target/
-docker cp maven-builder:/app/crm-file/target/crm-file.jar target/
+docker cp maven-builder:/app/crm-gateway/target/crm-gateway.jar target/ || echo "Warning: Failed to copy crm-gateway.jar"
+docker cp maven-builder:/app/crm-am/target/crm-am.jar target/ || echo "Warning: Failed to copy crm-am.jar"
+docker cp maven-builder:/app/crm-cp/target/crm-cp.jar target/ || echo "Warning: Failed to copy crm-cp.jar"
+docker cp maven-builder:/app/crm-file/target/crm-file.jar target/ || echo "Warning: Failed to copy crm-file.jar"
 
 # Clean up the container
 echo "Cleaning up Maven container..."
