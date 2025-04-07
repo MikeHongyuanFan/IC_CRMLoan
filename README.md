@@ -9,6 +9,24 @@ This repository contains the CRM Loan System with both backend and frontend comp
 - `CRM项目/web/cp-web`: CP Web frontend application (Vue.js)
 - `Calculator`: Loan calculation tools
 
+## Quick Start
+
+For a quick deployment, use the provided scripts:
+
+```bash
+# Clean up any existing deployment
+./cleanup.sh
+
+# Deploy the entire system
+./deploy-local.sh
+```
+
+Or to clean and deploy in one step:
+
+```bash
+./deploy-local.sh --clean
+```
+
 ## Docker Deployment
 
 ### Prerequisites
