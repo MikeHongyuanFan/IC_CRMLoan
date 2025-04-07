@@ -15,7 +15,7 @@ services:
     command: redis-server --port 6379 --requirepass redirect!@#aly --appendonly yes
 
   mysql:
-    image: arm64v8/mysql:5.7
+    image: mariadb:10.6
     hostname: loan-mysql-url
     container_name: loan-mysql
     restart: always
