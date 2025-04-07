@@ -17,9 +17,13 @@ docker-compose up -d redis mysql nacos
 echo "Waiting for infrastructure services to be ready..."
 sleep 30
 
-# Step 3: Start application services
-echo "Step 3: Starting application services..."
-docker-compose up -d crm-gateway crm-am crm-cp crm-file crm-frontend cp-frontend
+# Step 3: Build and start backend services
+echo "Step 3: Building and starting backend services..."
+./build-backend.sh
+
+# Step 4: Build and start frontend services
+echo "Step 4: Building and starting frontend services..."
+./build-frontend.sh
 
 echo "Deployment complete! Services are starting up."
 echo "You can access the applications at:"

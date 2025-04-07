@@ -5,25 +5,22 @@ set -e
 
 echo "Setting up Docker environment for CRM Loan System..."
 
-# Create Dockerfiles for backend services
-echo "Creating Dockerfiles for backend services..."
-cp backend-dockerfile-template CRM项目/api/crm/crm-gateway/Dockerfile
-cp backend-dockerfile-template CRM项目/api/crm/crm-am/Dockerfile
-cp backend-dockerfile-template CRM项目/api/crm/crm-cp/Dockerfile
-cp backend-dockerfile-template CRM项目/api/crm/crm-file/Dockerfile
+# Create directories for backend services if they don't exist
+mkdir -p CRM项目/api/crm/crm-gateway
+mkdir -p CRM项目/api/crm/crm-am
+mkdir -p CRM项目/api/crm/crm-cp
+mkdir -p CRM项目/api/crm/crm-file
+
+# Create directories for frontend services if they don't exist
+mkdir -p CRM项目/web/crm/docker
+mkdir -p CRM项目/web/cp-web/docker
 
 # Check if cp-web has a Dockerfile, if not create one
 if [ ! -f "CRM项目/web/cp-web/docker/Dockerfile" ]; then
   echo "Creating Dockerfile for CP Web frontend..."
-  mkdir -p CRM项目/web/cp-web/docker
   cat > CRM项目/web/cp-web/docker/Dockerfile << 'EOF'
-FROM node:14-alpine AS builder
-WORKDIR /app
-COPY . .
-RUN npm install && npm run build
-
 FROM nginx:alpine
-COPY --from=builder /app/dist /data
+COPY dist /data
 RUN rm /etc/nginx/conf.d/default.conf
 COPY docker/cp-web.conf /etc/nginx/conf.d/
 EXPOSE 80
@@ -58,16 +55,11 @@ server {
 EOF
 fi
 
-# Update CRM frontend Dockerfile to use multi-stage build
+# Update CRM frontend Dockerfile
 echo "Updating CRM frontend Dockerfile..."
 cat > CRM项目/web/crm/docker/Dockerfile << 'EOF'
-FROM node:14-alpine AS builder
-WORKDIR /app
-COPY . .
-RUN npm install && npm run build
-
 FROM nginx:alpine
-COPY --from=builder /app/dist /data
+COPY dist /data
 RUN rm /etc/nginx/conf.d/default.conf
 COPY docker/aus-crm.conf /etc/nginx/conf.d/
 EXPOSE 80
@@ -103,4 +95,4 @@ server {
 EOF
 
 echo "Setup complete! You can now run the services with:"
-echo "docker-compose up -d"
+echo "./deploy-local.sh"
