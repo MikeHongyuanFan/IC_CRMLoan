@@ -1,9 +1,7 @@
-version: "3"
-
 services:
   # Infrastructure services
   redis:
-    image: redis:5.0.5-alpine-1
+    image: redis:5.0-alpine
     hostname: loan-redis-url
     container_name: loan-redis
     networks:
