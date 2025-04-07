@@ -13,9 +13,17 @@ echo "Step 1: Setting up Docker files..."
 echo "Step 2: Building applications using Docker..."
 docker-compose -f docker-compose-build.yaml up
 
-# Step 3: Start all services
-echo "Step 3: Starting all services..."
-docker-compose up -d
+# Step 3: Start infrastructure services first
+echo "Step 3: Starting infrastructure services..."
+docker-compose up -d redis mysql nacos
+
+# Wait for infrastructure services to be ready
+echo "Waiting for infrastructure services to be ready..."
+sleep 30
+
+# Step 4: Start application services
+echo "Step 4: Starting application services..."
+docker-compose up -d crm-gateway crm-am crm-cp crm-file crm-frontend cp-frontend
 
 echo "Deployment complete! Services are starting up."
 echo "You can access the applications at:"
