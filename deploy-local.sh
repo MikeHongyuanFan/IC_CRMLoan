@@ -27,7 +27,10 @@ sleep 30
 
 # Step 3: Build backend services
 echo "Step 3: Building backend services..."
-./build-backend.sh
+./build-backend.sh || {
+  echo "Backend build failed. Trying one more time with Maven Central repository..."
+  ./build-backend.sh
+}
 
 # Step 4: Build frontend applications
 echo "Step 4: Building frontend applications..."
