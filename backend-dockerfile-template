@@ -1,0 +1,16 @@
+FROM openjdk:8-jdk-alpine
+
+WORKDIR /app
+
+# Copy the jar file
+COPY target/*.jar app.jar
+
+# Set environment variables
+ENV SPRING_PROFILES_ACTIVE=prod
+ENV loan.nacos.addr=loan-nacos-url
+
+# Expose the port the app runs on
+EXPOSE 8080
+
+# Run the jar file
+ENTRYPOINT ["java", "-jar", "app.jar"]

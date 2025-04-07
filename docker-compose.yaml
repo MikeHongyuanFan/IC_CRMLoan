@@ -1,0 +1,178 @@
+version: "3"
+
+services:
+  # Infrastructure services
+  redis:
+    image: redis:5.0.5-alpine-1
+    hostname: loan-redis-url
+    container_name: loan-redis
+    networks:
+      - crm_network
+    ports:
+      - "6379:6379"
+    restart: always
+    volumes:
+      - redis-conf:/etc/redis
+      - redis-data:/data
+    command: redis-server --port 6379 --requirepass redirect!@#aly --appendonly yes
+
+  mysql:
+    image: mysql/mysql-server:5.7.22
+    hostname: loan-mysql-url
+    container_name: loan-mysql
+    restart: always
+    networks:
+      - crm_network
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_HOST: "%"
+      MYSQL_ROOT_PASSWORD: redirect!@#aly
+    command:
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_general_ci
+      --explicit_defaults_for_timestamp=true
+      --lower_case_table_names=1
+      --max_allowed_packet=128M
+      --sql-mode="STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO"
+    volumes:
+      - mysql-conf:/etc/mysql
+      - mysql-logs:/var/log/mysql
+      - mysql-data:/var/lib/mysql
+
+  nacos:
+    hostname: loan-nacos-url
+    image: nacos/nacos-server:1.3.2
+    restart: always
+    container_name: loan-nacos
+    depends_on:
+      - mysql
+    networks:
+      - crm_network
+    ports:
+      - "8848:8848"
+    environment:
+      MODE: standalone
+      JVM_XMS: 256m
+      JVM_XMX: 256m
+      JVM_XMN: 128m
+      SPRING_DATASOURCE_PLATFORM: mysql
+      MYSQL_SERVICE_HOST: loan-mysql-url
+      MYSQL_SERVICE_PORT: 3306
+      MYSQL_SERVICE_DB_NAME: nacos
+      MYSQL_SERVICE_USER: root
+      MYSQL_SERVICE_PASSWORD: redirect!@#aly
+      MYSQL_SERVICE_DB_PARAM: characterEncoding=utf8&connectTimeout=10000&socketTimeout=30000&autoReconnect=true&useSSL=false&allowPublicKeyRetrieval=true
+    volumes:
+      - nacos-conf:/home/nacos/init.d/
+      - nacos-logs:/home/nacos/logs
+
+  # Backend services
+  crm-gateway:
+    build:
+      context: ./CRM项目/api/crm/crm-gateway
+      dockerfile: Dockerfile
+    container_name: crm-gateway
+    restart: always
+    networks:
+      - crm_network
+    ports:
+      - "30001:30001"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - loan.nacos.addr=loan-nacos-url
+    depends_on:
+      - nacos
+      - mysql
+      - redis
+
+  crm-am:
+    build:
+      context: ./CRM项目/api/crm/crm-am
+      dockerfile: Dockerfile
+    container_name: crm-am
+    restart: always
+    networks:
+      - crm_network
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - loan.nacos.addr=loan-nacos-url
+    depends_on:
+      - nacos
+      - mysql
+      - redis
+      - crm-gateway
+
+  crm-cp:
+    build:
+      context: ./CRM项目/api/crm/crm-cp
+      dockerfile: Dockerfile
+    container_name: crm-cp
+    restart: always
+    networks:
+      - crm_network
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - loan.nacos.addr=loan-nacos-url
+    depends_on:
+      - nacos
+      - mysql
+      - redis
+      - crm-gateway
+
+  crm-file:
+    build:
+      context: ./CRM项目/api/crm/crm-file
+      dockerfile: Dockerfile
+    container_name: crm-file
+    restart: always
+    networks:
+      - crm_network
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - loan.nacos.addr=loan-nacos-url
+    depends_on:
+      - nacos
+      - mysql
+      - redis
+      - crm-gateway
+
+  # Frontend service
+  crm-frontend:
+    build:
+      context: ./CRM项目/web/crm
+      dockerfile: ./docker/Dockerfile
+    container_name: crm-frontend
+    restart: always
+    networks:
+      - crm_network
+    ports:
+      - "9527:80"
+    depends_on:
+      - crm-gateway
+
+  cp-frontend:
+    build:
+      context: ./CRM项目/web/cp-web
+      dockerfile: ./docker/Dockerfile
+    container_name: cp-frontend
+    restart: always
+    networks:
+      - crm_network
+    ports:
+      - "9528:80"
+    depends_on:
+      - crm-gateway
+
+networks:
+  crm_network:
+    driver: bridge
+
+volumes:
+  redis-data:
+  redis-conf:
+  mysql-conf:
+  mysql-data:
+  mysql-logs:
+  nacos-logs:
+  nacos-conf:
