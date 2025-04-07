@@ -4,19 +4,26 @@ set -e
 echo "Building backend services..."
 
 # Create a temporary Docker container to build the backend
-docker run --rm -v $(pwd)/CRM项目/api/crm:/app -w /app maven:3.8-openjdk-8 mvn clean package -DskipTests
+echo "Creating Maven container to build the backend..."
+docker run --name maven-builder -v $(pwd)/CRM项目/api/crm:/app -w /app maven:3.8-openjdk-8 mvn clean package -DskipTests
 
 # Create target directory if it doesn't exist
 mkdir -p target
 
-# Copy the built JAR files to the appropriate locations
+# Copy the built JAR files from the container to the host
 echo "Copying built JAR files..."
-cp CRM项目/api/crm/crm-gateway/target/*.jar target/crm-gateway.jar
-cp CRM项目/api/crm/crm-am/target/*.jar target/crm-am.jar
-cp CRM项目/api/crm/crm-cp/target/*.jar target/crm-cp.jar
-cp CRM项目/api/crm/crm-file/target/*.jar target/crm-file.jar
+docker cp maven-builder:/app/crm-gateway/target/crm-gateway.jar target/
+docker cp maven-builder:/app/crm-am/target/crm-am.jar target/
+docker cp maven-builder:/app/crm-cp/target/crm-cp.jar target/
+docker cp maven-builder:/app/crm-file/target/crm-file.jar target/
 
-# Update Dockerfiles to use the pre-built JAR files
+# Clean up the container
+echo "Cleaning up Maven container..."
+docker rm maven-builder
+
+# Create simple Dockerfiles for each service
+echo "Creating Dockerfiles for backend services..."
+
 cat > CRM项目/api/crm/crm-gateway/Dockerfile << 'DOCKERFILE'
 FROM openjdk:8-jdk-alpine
 WORKDIR /app
@@ -54,5 +61,4 @@ ENV loan.nacos.addr=loan-nacos-url
 ENTRYPOINT ["java", "-jar", "app.jar"]
 DOCKERFILE
 
-echo "Starting backend services..."
-docker-compose up -d crm-gateway crm-am crm-cp crm-file
+echo "Backend build completed successfully!"
